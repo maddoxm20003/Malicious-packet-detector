@@ -1,4 +1,4 @@
-pu"""
+"""
 File: src/evaluate.py
 Description: Assessment engine for the project. Compares the model's multi-class predictions 
              against the ground-truth test labels. Computes multi-class evaluation scores 
@@ -41,7 +41,7 @@ def evaluate_predictions(model, X_test, y_test, report_destination="output/repor
         f.write(" NAIVE BAYES NETWORK TRAFFIC CLASSIFIER PERFORMANCE\n")
         f.write("==================================================\n\n")
         f.write(f"Overall Global Accuracy: {accuracy:.4f}\n\n")
-        +f.write("Detailed Class Metrics:\n")
+        f.write("Detailed Class Metrics:\n")
         f.write(metrics_report)
         
     print(f"[EVALUATE] Performance report saved to: {report_destination}")
