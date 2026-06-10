@@ -1,0 +1,5 @@
+# File: data/raw/network_sessions.csv
+# Description: Pristine, immutable raw data storage containing a subset of 150 network 
+#              connection sessions[cite: 6]. Features include raw representations of Packet Size, 
+#              Protocol Type, Source Port Range, and Present Flags[cite: 7]. This file is never 
+#              modified directly by any script.

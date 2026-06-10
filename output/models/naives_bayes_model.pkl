@@ -1,0 +1,4 @@
+# File: output/models/naive_bayes_model.pkl
+# Description: Serialized (pickled) Python object containing the trained Naive Bayes classifier artifact. 
+#              Saving the model allows it to be loaded later for instant threat prediction on new, 
+#              real-time network packet stream inputs without needing to re-run the entire training process.

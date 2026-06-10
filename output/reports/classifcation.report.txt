@@ -1,0 +1,4 @@
+# File: output/reports/classification_report.txt
+# Description: Human-readable evaluation report generated after testing. Documents the model's success 
+#              in sorting traffic into C1 (Safe), C2 (Suspicious), and C3 (Malicious) classes[cite: 8], 
+#              storing final metrics like global accuracy alongside precision and recall per category[cite: 9].
