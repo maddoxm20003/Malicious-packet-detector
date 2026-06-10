@@ -30,6 +30,7 @@ def encode_and_isolate_features(df):
     # 1. Isolate target vector (y) and drop tracking columns like session_id
     y = df['traffic_category']
     feature_base = df.drop(columns=['session_id', 'traffic_category'])
+    feature_base = df.drop(columns=['session_id', 'traffic_category'], errors='ignore')
     
     # 2. Perform One-Hot Encoding on categorical columns
     # This automatically splits 'protocol_type', 'source_port_range', and 'flags_present'
