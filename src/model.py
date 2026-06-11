@@ -7,23 +7,40 @@ Description: Handles the machine learning model lifecycle. Contains functions to
 
 import os
 import joblib
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.naive_bayes import GaussianNB
 
 def train_naive_bayes(X_train, y_train):
     """
-    Instantiates the Gaussian Naive Bayes algorithm and fits it to the 
-    preprocessed training dataset.
+    Creates a Pipeline that includes preprocessing (Scaling and One-Hot Encoding)
+    and the Gaussian Naive Bayes classifier.
     """
-    print("[MODEL] Initializing Gaussian Naive Bayes classifier...")
-    # Initialize the model
-    model = GaussianNB()
+    print("[MODEL] Building Pipeline (Preprocessing + Classifier)...")
     
-    # Train the model on the 80% training data split
-    print("[MODEL] Fitting the model to training data...")
-    model.fit(X_train, y_train)
+    # Define feature groups
+    categorical_features = ['protocol_type', 'source_port_range', 'flags_present']
+    numeric_features = ['packet_size_bytes']
+
+    # Create a preprocessor that handles both types of data
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', StandardScaler(), numeric_features),
+            ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+        ])
+
+    # Build the full pipeline
+    pipeline = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('classifier', GaussianNB())
+    ])
+    
+    print("[MODEL] Fitting pipeline to training data...")
+    pipeline.fit(X_train, y_train)
     print("[MODEL] Model training complete.")
     
-    return model
+    return pipeline
 
 def save_model(model, destination_path="output/models/naive_bayes_model.pkl"):
     """

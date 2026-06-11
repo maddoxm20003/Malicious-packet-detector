@@ -22,25 +22,6 @@ def load_raw_data(file_path):
         print(f"[ERROR] The file at {file_path} was not found. Please run generate_data.py first.")
         raise
 
-def encode_and_isolate_features(df):
-    """
-    Separates the target labels from features, and converts categorical text 
-    features (Protocol, Flags, Port Range) into binary vectors via One-Hot Encoding.
-    """
-    # 1. Isolate target vector (y) and drop tracking columns like session_id
-    y = df['traffic_category']
-    feature_base = df.drop(columns=['session_id', 'traffic_category'])
-    feature_base = df.drop(columns=['session_id', 'traffic_category'], errors='ignore')
-    
-    # 2. Perform One-Hot Encoding on categorical columns
-    # This automatically splits 'protocol_type', 'source_port_range', and 'flags_present'
-    # into distinct columns of 0s and 1s, while keeping 'packet_size_bytes' intact.
-    categorical_cols = ['protocol_type', 'source_port_range', 'flags_present']
-    X = pd.get_dummies(feature_base, columns=categorical_cols, dtype=int)
-    
-    print(f"[PREPROCESS] Feature matrix shape after One-Hot Encoding: {X.shape}")
-    return X, y
-
 def split_data(X, y, test_size=0.20, random_state=42):
     """
     Partitions the matrix into separate datasets using an 80/20 train/test ratio.
@@ -63,8 +44,9 @@ def run_preprocessing_pipeline(raw_data_path):
     # Step 1: Load data
     df = load_raw_data(raw_data_path)
     
-    # Step 2: One-Hot Encode and isolate features
-    X, y = encode_and_isolate_features(df)
+    # Step 2: Isolate features and target
+    y = df['traffic_category']
+    X = df.drop(columns=['session_id', 'traffic_category'], errors='ignore')
     
     # Step 3: Train/Test Split
     X_train, X_test, y_train, y_test = split_data(X, y)

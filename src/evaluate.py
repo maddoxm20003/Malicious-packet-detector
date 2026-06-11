@@ -22,12 +22,11 @@ def evaluate_predictions(model, X_test, y_test, report_destination="output/repor
     accuracy = accuracy_score(y_test, y_pred)
     print(f"[EVALUATE] Global Model Accuracy: {accuracy:.4f}")
     
-    # 3. Generate a comprehensive multi-class classification report
-    # target_names maps directly to your C1, C2, and C3 traffic categories
+    # 3. Generate report using the actual classes found in the model
     metrics_report = classification_report(
         y_test, 
         y_pred, 
-        target_names=['C1: Safe', 'C2: Suspicious', 'C3: Malicious']
+        target_names=model.classes_
     )
     
     print("\n--- Model Performance Report ---")
