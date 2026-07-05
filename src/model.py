@@ -6,6 +6,7 @@ Description: Handles the machine learning model lifecycle. Contains functions to
 """
 
 import os
+import json
 import joblib
 from sklearn.naive_bayes import GaussianNB
 
@@ -36,4 +37,15 @@ def save_model(model, destination_path="output/models/naive_bayes_model.pkl"):
     # Save the model
     joblib.dump(model, destination_path)
     print(f"[MODEL] Trained model artifact successfully saved to: {destination_path}")
-    
+
+def save_feature_columns(columns, destination_path="output/models/feature_columns.json"):
+    """
+    Persists the trained feature matrix's column order/names as the single source of
+    truth for what the model expects. predict_live.py and evaluate_real_data.py both
+    load this instead of hardcoding their own copy of the column list, which would
+    otherwise silently drift out of sync whenever the training schema changes.
+    """
+    os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+    with open(destination_path, "w") as f:
+        json.dump(list(columns), f, indent=2)
+    print(f"[MODEL] Feature columns saved to: {destination_path}")

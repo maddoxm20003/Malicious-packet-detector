@@ -1,0 +1,23 @@
+==================================================
+ NAIVE BAYES NETWORK TRAFFIC CLASSIFIER PERFORMANCE
+==================================================
+
+Overall Global Accuracy (single 80/20 split): 0.0010
+
+Detailed Class Metrics:
+                precision    recall  f1-score   support
+
+      C1: Safe       0.00      0.00      0.00      2198
+C2: Suspicious       0.00      0.00      0.00         0
+ C3: Malicious       0.00      0.00      0.00      8222
+
+      accuracy                           0.00     10420
+     macro avg       0.00      0.00      0.00     10420
+  weighted avg       0.00      0.00      0.00     10420
+
+
+Confusion Matrix (rows=actual, cols=predicted):
+                        C1: Safe  C2: Suspicious   C3: Malicious
+C1: Safe                      10            2186               2
+C2: Suspicious                 0               0               0
+C3: Malicious               2056            6166               0

@@ -1,10 +1,12 @@
 """
 File: src/preprocess.py
-Description: Subsystem dedicated to data cleaning and feature engineering. Ingests raw network 
-             session logs [cite: 6] and transforms them into numerical arrays. Tasks include 
-             handling feature parsing, encoding categorical features (Protocol Type, Flags Present, 
-             Source Port Range) [cite: 7], scaling numerical values (Packet Size)[cite: 7], 
-             and isolating the target classification labels.
+Description: Subsystem dedicated to data cleaning and feature engineering. Ingests raw network
+             session logs [cite: 6] and transforms them into numerical arrays. Tasks include
+             handling feature parsing, encoding categorical features (Protocol Type, Flags Present,
+             Source Port Range) [cite: 7], scaling numerical values (Packet Size)[cite: 7],
+             and isolating the target classification labels. Flow-level numeric fields
+             (duration_ms, packet_count) pass through unchanged alongside packet_size_bytes,
+             giving the classifier additional separable signal between traffic classes.
 """
 
 import pandas as pd
@@ -33,7 +35,8 @@ def encode_and_isolate_features(df):
     
     # 2. Perform One-Hot Encoding on categorical columns
     # This automatically splits 'protocol_type', 'source_port_range', and 'flags_present'
-    # into distinct columns of 0s and 1s, while keeping 'packet_size_bytes' intact.
+    # into distinct columns of 0s and 1s, while keeping the numeric columns
+    # ('packet_size_bytes', 'duration_ms', 'packet_count') intact.
     categorical_cols = ['protocol_type', 'source_port_range', 'flags_present']
     X = pd.get_dummies(feature_base, columns=categorical_cols, dtype=int)
     
@@ -57,15 +60,16 @@ def split_data(X, y, test_size=0.20, random_state=42):
 def run_preprocessing_pipeline(raw_data_path):
     """
     Facilitates the entire sequential workflow of the preprocessing stage.
-    Can be called directly by main.py.
+    Can be called directly by main.py. Returns the full (unsplit) X/y alongside
+    the train/test split so callers can also run cross-validation on the full set.
     """
     # Step 1: Load data
     df = load_raw_data(raw_data_path)
-    
+
     # Step 2: One-Hot Encode and isolate features
     X, y = encode_and_isolate_features(df)
-    
+
     # Step 3: Train/Test Split
     X_train, X_test, y_train, y_test = split_data(X, y)
-    
-    return X_train, X_test, y_train, y_test
+
+    return X, y, X_train, X_test, y_train, y_test
