@@ -5,32 +5,48 @@ Description: Bridges the gap between raw network traffic and the ML model.
              and runs inference using the trained Naive Bayes model.
 """
 
-import json
 import pandas as pd
 import joblib
-from scapy.all import sniff, IP, TCP, UDP
+from scapy.all import sniff, IP, TCP, UDP, ICMP
 import os
 import argparse
-from src.packet_features import get_proto_name, get_port_range, classify_flags, get_flow_key
 
 # Load the pre-trained model
 MODEL_PATH = "output/models/naive_bayes_model.pkl"
-FEATURE_COLUMNS_PATH = "output/models/feature_columns.json"
-if not os.path.exists(MODEL_PATH) or not os.path.exists(FEATURE_COLUMNS_PATH):
-    print(f"[ERROR] Model or feature schema not found. Please run main.py first.")
+if not os.path.exists(MODEL_PATH):
+    print(f"[ERROR] Model not found at {MODEL_PATH}. Please run main.py first.")
     exit()
 
 model = joblib.load(MODEL_PATH)
 
 # The exact columns the model expects (must match training output)
-with open(FEATURE_COLUMNS_PATH) as f:
-    FEATURE_COLUMNS = json.load(f)
+FEATURE_COLUMNS = [
+    'packet_size_bytes', 'duration_ms', 'packet_count',
+    'protocol_type_ICMP', 'protocol_type_TCP',
+    'protocol_type_UDP', 'source_port_range_Dynamic',
+    'source_port_range_Registered', 'source_port_range_Well-Known',
+    'flags_present_ACK', 'flags_present_FIN', 'flags_present_NONE',
+    'flags_present_SYN'
+]
 
 # Tracks in-progress flows so duration_ms/packet_count can be computed live:
 # {(src_ip, dst_ip, sport, dport, proto): {"start_time": float, "packet_count": int}}
 # NOTE: entries are never evicted, so this grows unbounded on a long-running live
 # capture. Fine for a demo/short pcap; a real deployment would need a flow timeout.
 active_flows = {}
+
+def get_flow_key(packet, proto):
+    sport = packet.sport if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
+    dport = packet.dport if packet.haslayer(TCP) or packet.haslayer(UDP) else 0
+    return (packet[IP].src, packet[IP].dst, sport, dport, proto)
+
+def get_port_range(port):
+    if 0 <= port <= 1023:
+        return "Well-Known"
+    elif 1024 <= port <= 49151:
+        return "Registered"
+    else:
+        return "Dynamic"
 
 def process_packet(packet):
     if not packet.haslayer(IP):
@@ -39,14 +55,19 @@ def process_packet(packet):
     # 1. Extract Raw Features
     src_ip = packet[IP].src
     size = len(packet)
-    proto = get_proto_name(packet)
+    proto = "UDP" if packet.haslayer(UDP) else "TCP" if packet.haslayer(TCP) else "ICMP" if packet.haslayer(ICMP) else "OTHER"
 
     port = 0
     if packet.haslayer(TCP) or packet.haslayer(UDP):
         port = packet.sport
     port_range = get_port_range(port)
 
-    flags = classify_flags(packet[TCP].flags) if packet.haslayer(TCP) else "NONE"
+    flags = "NONE"
+    if packet.haslayer(TCP):
+        f = packet[TCP].flags
+        if 'S' in f: flags = "SYN"
+        elif 'A' in f: flags = "ACK"
+        elif 'F' in f: flags = "FIN"
 
     # 2. Track flow-level state (duration/packet count) across packets in this connection.
     # Uses packet.time (the capture timestamp) rather than wall-clock time, so offline
@@ -97,7 +118,7 @@ def main():
         print("[STREAMS] Starting live Malicious Packet Detection...")
         print("[STREAMS] Listening for IP traffic (Press Ctrl+C to stop)")
         print("=========================================================")
-    
+
         try:
             # Sniff IP packets and pass them to our processing function
             sniff(filter="ip", prn=process_packet, store=0)

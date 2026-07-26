@@ -12,7 +12,7 @@ Date: June 2026
 
 
 from src.preprocess import run_preprocessing_pipeline
-from src.model import train_naive_bayes, save_model, save_feature_columns
+from src.model import train_naive_bayes, save_model
 from src.evaluate import evaluate_predictions, cross_validate_model
 
 def main():
@@ -20,7 +20,6 @@ def main():
     # 1. Define the path to your raw dataset of 150 network sessions
     RAW_DATA_PATH = "data/raw/network_sessions.csv"
     MODEL_OUTPUT_PATH = "output/models/naive_bayes_model.pkl"
-    FEATURE_COLUMNS_PATH = "output/models/feature_columns.json"
     REPORT_OUTPUT_PATH = "output/reports/classification_report.txt"
     
     print("[PIPELINE] Starting Malicious Packet Detection Pipeline...")
@@ -43,10 +42,6 @@ def main():
 
     # Save the trained model artifact to disk for future portability
     save_model(trained_clf, MODEL_OUTPUT_PATH)
-
-    # Save the feature column schema so predict_live.py / evaluate_real_data.py can
-    # align their own extracted features to exactly what this model was trained on
-    save_feature_columns(X.columns, FEATURE_COLUMNS_PATH)
     print("---------------------------------------------------------")
 
     # 5. Execute Evaluation Stage
